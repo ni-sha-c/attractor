@@ -50,8 +50,14 @@ def map_tangent_to_torus(u,v):
 
     return v_mapped
 
-
-
+@jit(nopython=True)
+def map_line_to_torus(phi0, theta0, m, n=100):
+    phi0 /= 2*pi
+    theta0 /= 2*pi
+    phi = linspace(0, 1., n)
+    theta = (m*(phi - phi0) + theta0)%1
+    x_line, y_line, z_line = map_state_to_torus(phi,theta)
+    return x_line, y_line, z_line    
 
 @jit(nopython=True)
 def get_primal_trajectory(solver, u0, s, n):
@@ -128,7 +134,20 @@ def draw_torus():
     fig.patches.insert(0,patches.PathPatch(theta_path))
     return fig, ax
    
-'''
+def draw_local_invariant_manifolds(phi,theta):
+    fig, ax = draw_torus()
+    eig_vals, eig_vecs = linalg.eig(array([\
+            2,1,1,1]).reshape(2,2))
+    ms = eig_vecs[1,1]/eig_vecs[1,0]
+    mu = eig_vecs[0,1]/eig_vecs[0,0]
+    x_line, y_line, z_line = map_line_to_torus( \
+            phi, theta, ms)
+    ax.plot(x_line,y_line,z_line,lw=2.5,c="b")
+    x_line, y_line, z_line = map_line_to_torus( \
+            phi, theta, mu)
+    ax.plot(x_line,y_line,z_line,c="r",lw=2.5)
+
+
 if __name__ == "__main__":
 
     solver = Solver()
@@ -139,8 +158,6 @@ if __name__ == "__main__":
     l, v = solver.get_lyapunov_exponents_vectors()
     v0 = v[0]
     v0 = tile(v0, (n, 1))
-    fig, ax = draw_tangent_on_torus(u,v0)
-'''
-
+    #fig, ax = draw_tangent_on_torus(u,v0)
 
 
